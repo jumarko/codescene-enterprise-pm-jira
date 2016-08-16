@@ -10,7 +10,8 @@
                  [ragtime "0.6.3"]
                  [com.h2database/h2 "1.4.192"]
                  [org.clojure/java.jdbc "0.6.1"]
-                 [com.taoensso/timbre "4.7.0" :exclusions [org.clojure/tools.reader]]]
+                 [com.taoensso/timbre "4.7.0" :exclusions [org.clojure/tools.reader]]
+                 [yesql "0.5.3"]]
   :plugins [[lein-ring "0.9.7"]
             [lein-uberwar "0.2.0"]]
   :ring {:handler codescene-enterprise-pm-jira.handler/app
