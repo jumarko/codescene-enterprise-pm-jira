@@ -6,12 +6,12 @@ A *Project Management* service which integrates JIRA with CodeScene Enterprise.
 
 This service:
 
-[ ] Periodically syncs issues from JIRA
-[ ] Stores issues in a local database
-[ ] Syncs only issues with cost values set
-[ ] Supported *types of work* can be configured
-[ ] Cost unit type can be configured
-[ ] JIRA Labels can be mapped to types of work in configuration
+- [ ] Periodically syncs issues from JIRA
+- [ ] Stores issues in a local database
+- [ ] Syncs only issues with cost values set
+- [ ] Supported *types of work* can be configured
+- [ ] Cost unit type can be configured
+- [ ] JIRA Labels can be mapped to types of work in configuration
 
 ## Prerequisites
 
