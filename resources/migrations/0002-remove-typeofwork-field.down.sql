@@ -1,0 +1,1 @@
+ALTER TABLE issues ADD COLUMN type_of_work INT;

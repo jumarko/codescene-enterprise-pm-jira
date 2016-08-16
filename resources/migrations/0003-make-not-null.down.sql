@@ -1,0 +1,1 @@
+ALTER TABLE issues ALTER COLUMN cost SET NULL;
