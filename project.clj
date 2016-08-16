@@ -3,14 +3,14 @@
   :url "http://example.com/FIXME"
   :min-lein-version "2.0.0"
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [compojure "1.5.1"]
-                 [ring/ring-defaults "0.2.1"]
+                 [compojure "1.5.1" :exclusions [commons-io]]
+                 [ring/ring-defaults "0.2.1" :exclusions [commons-io]]
                  [clj-http "3.1.0"]
                  [cheshire "5.6.3"]
                  [ragtime "0.6.3"]
                  [com.h2database/h2 "1.4.192"]
                  [org.clojure/java.jdbc "0.6.1"]
-                 [com.taoensso/timbre "4.7.0"]]
+                 [com.taoensso/timbre "4.7.0" :exclusions [org.clojure/tools.reader]]]
   :plugins [[lein-ring "0.9.7"]
             [lein-uberwar "0.2.0"]]
   :ring {:handler codescene-enterprise-pm-jira.handler/app
