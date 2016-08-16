@@ -1,6 +1,6 @@
 (defproject codescene-enterprise-pm-jira "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
-  :url "http://example.com/FIXME"
+  :description "A Project Management service which integrates JIRA with CodeScene Enterprise"
+  :url "https://github.com/empear-analytics/codescene-enterprise-pm-jira"
   :min-lein-version "2.0.0"
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [compojure "1.5.1" :exclusions [commons-io]]
