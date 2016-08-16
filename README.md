@@ -122,6 +122,33 @@ Cache-Control: max-age=14400
 }
 ```
 
+## Test/REPL Stuff
+
+Adding/replacing a project with some test data:
+
+``` clojure
+> (def conn (codescene-enterprise-pm-jira.db/persistent-connection))
+> (replace-project conn
+    {:key "CSE"
+     :cost-unit {:type "numeric"
+                 :format {:singular "point" :plural "points"}}}
+    [{:key "CSE-1" :cost 10 :work-types ["Bug" "Documentation"]}
+     {:key "CSE-2" :cost 25 :work-types ["Feature" "Documentation"]}
+     {:key "CSE-3" :cost 5 :work-types ["Bug"]}])
+```
+
+Getting the project back:
+
+```clojure
+> (get-project conn "CSE")
+;=>
+{:key "CSE",
+ :cost-unit {:type "numeric", :singular "point", :plural "points"},
+ :issues ({:cost 10, :key "CSE-1", :work-types #{"Documentation" "Bug"}}
+          {:cost 25, :key "CSE-2", :work-types #{"Documentation" "Feature"}}
+          {:cost 5, :key "CSE-3", :work-types #{"Bug"}})}
+```
+
 ## License
 
 Copyright © 2016 Empear
