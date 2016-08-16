@@ -3,7 +3,9 @@
             [compojure.route :as route]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [clj-http.client :as client]
-            [cheshire.core :as json]))
+            [cheshire.core :as json]
+            [codescene-enterprise-pm-jira.db :as db]
+            [taoensso.timbre :as log]))
 
 (def ^:const rest-url "http://jira-integration.codescene.io/rest/api/latest")
 
@@ -29,3 +31,10 @@
 
 (def app
   (wrap-defaults app-routes site-defaults))
+
+(defn init []
+  (log/info "init called")
+  (db/init))
+
+(defn destroy []
+  (log/info "destroy called"))

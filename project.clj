@@ -6,9 +6,23 @@
                  [compojure "1.5.1"]
                  [ring/ring-defaults "0.2.1"]
                  [clj-http "3.1.0"]
-                 [cheshire "5.6.3"]]
-  :plugins [[lein-ring "0.9.7"]]
-  :ring {:handler codescene-enterprise-pm-jira.handler/app}
+                 [cheshire "5.6.3"]
+                 [ragtime "0.6.3"]
+                 [com.h2database/h2 "1.4.192"]
+                 [org.clojure/java.jdbc "0.6.1"]
+                 [com.taoensso/timbre "4.7.0"]]
+  :plugins [[lein-ring "0.9.7"]
+            [lein-uberwar "0.2.0"]]
+  :ring {:handler codescene-enterprise-pm-jira.handler/app
+         :init codescene-enterprise-pm-jira.handler/init
+         :destroy codescene-enterprise-pm-jira.handler/destroy}
+  :uberwar {:handler codescene-enterprise-pm-jira.handler/app
+            :init codescene-enterprise-pm-jira.handler/init
+            :destroy codescene-enterprise-pm-jira.handler/destroy
+            :name "codescene-enterprise-pm-jira.war"}
+  :uberjar-name "codescene-enterprise-pm-jira.standalone.jar"
   :profiles
   {:dev {:dependencies [[javax.servlet/servlet-api "2.5"]
-                        [ring/ring-mock "0.3.0"]]}})
+                        [ring/ring-mock "0.3.0"]]}}
+  :aot [codescene-enterprise-pm-jira.handler]
+  :aliases {"release" ["uberjar" "uberwar"]})
