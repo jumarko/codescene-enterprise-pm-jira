@@ -25,4 +25,5 @@
   {:dev {:dependencies [[javax.servlet/servlet-api "2.5"]
                         [ring/ring-mock "0.3.0"]]}}
   :aot [codescene-enterprise-pm-jira.handler]
-  :aliases {"release" ["uberjar" "uberwar"]})
+  :release-tasks [["ring" "uberjar"]
+                  ["uberwar"]])
