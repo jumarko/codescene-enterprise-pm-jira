@@ -47,33 +47,39 @@
                         :plural cost_unit_format_plural}))})
 
 (defn get-project [conn project-key]
-  (let [project-config (select-project
-                        {:project_key project-key}
-                        {:connection conn
-                         :row-fn row->project-config
-                         :result-set-fn first})
-        work-types (get-work-types-in-project conn project-key)
-        issues (get-issues-with-work-types-in-project conn project-key work-types)
-        ]
-    (merge project-config
-           {:work-types (set (map :type-name work-types))
-            :issues issues})))
+  (when-let [project-config (select-project
+                           {:project_key project-key}
+                           {:connection conn
+                            :row-fn row->project-config
+                            :result-set-fn first})]
+    (let [work-types (get-work-types-in-project conn project-key)
+          issues (get-issues-with-work-types-in-project conn project-key work-types)]
+      (merge project-config
+             {:work-types (set (map :type-name work-types))
+              :issues issues}))))
+
+(defn delete-project
+  "Deletes the given project together with all its issues and their work types."
+  [conn key]
+  (jdbc/with-db-transaction [tx conn]
+    (delete-work-types-in-project!
+     {:project_key key}
+     {:connection tx})
+    (delete-issues-in-project!
+     {:project_key key}
+     {:connection tx})
+    (delete-project!
+     {:project_key key}
+     {:connection tx})
+    nil))
 
 (defn replace-project [conn project-config issues]
   (let [project-key (:key project-config)]
     ;; Transaction, go!
     (jdbc/with-db-transaction [tx conn]
 
-      ;; First delete all existing issues for the project.
-      (delete-work-types-in-project!
-       {:project_key project-key}
-       {:connection tx})
-      (delete-issues-in-project!
-       {:project_key project-key}
-       {:connection tx})
-      (delete-project!
-       {:project_key project-key}
-       {:connection tx})
+      ;; First delete the project if it exists.
+      (delete-project tx project-key)
 
       ;; Then add the new ones.
       (insert-project!
