@@ -5,6 +5,7 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [compojure "1.5.1" :exclusions [commons-io]]
                  [ring/ring-defaults "0.2.1" :exclusions [commons-io]]
+                 [ring/ring-json "0.4.0"]
                  [clj-http "3.1.0"]
                  [cheshire "5.6.3"]
                  [ragtime "0.6.3"]
