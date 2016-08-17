@@ -1,0 +1,21 @@
+sync: null
+auth:
+  service:
+    username: johndoe
+    password: somepwd
+  jira:
+    base-uri: https://jira.example.com
+    username: jirauser
+    password: jirapwd
+projects:
+- key: CSE2
+  cost-field: timeoriginalestimate
+  cost-unit:
+    type: numeric
+    format:
+      singular: point
+      plural: points
+- key: PROJ
+  cost-field: somecustomfield
+  cost-unit:
+    type: minutes

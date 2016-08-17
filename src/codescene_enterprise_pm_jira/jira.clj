@@ -4,13 +4,13 @@
             [slingshot.slingshot :refer [try+ throw+]]
             [taoensso.timbre :as log]))
 
-(def ^:const ^:private rest-url
-  "http://jira-integration.codescene.io/rest/api/latest")
+(def ^:const ^:private rest-api-path
+  "/rest/api/latest")
 
-(defn- get-paged-data [params]
+(defn- get-paged-data [base-uri params]
   (loop [start-at 0
          total-issues []]
-    (let [result (client/get (str rest-url "/search")
+    (let [result (client/get (str base-uri rest-api-path "/search")
                              (-> params
                                  (assoc-in [:query-params :startAt] start-at)
                                  (assoc :conn-timeout 5000)))
@@ -21,18 +21,18 @@
         total-issues))))
 
 (defn- jira-issue->db-format [cost-field-name {:keys [fields key] :as issue}]
-  {:key key
-   :cost (get fields (keyword cost-field-name))
+  {:key        key
+   :cost       (get fields (keyword cost-field-name))
    :work-types (set (:labels fields))})
 
-(defn find-issues-with-cost [username password key cost-field-name]
+(defn find-issues-with-cost [base-uri username password key cost-field-name]
   (try+
     (map (partial jira-issue->db-format cost-field-name)
-         (get-paged-data {:basic-auth   [username password]
-                          :accept       :json
-                          :query-params {:jql (format "project=%s and %s!=EMPTY"
-                                                      key
-                                                      cost-field-name)}}))
+         (get-paged-data base-uri {:basic-auth   [username password]
+                                   :accept       :json
+                                   :query-params {:jql (format "project=%s and %s!=EMPTY"
+                                                               key
+                                                               cost-field-name)}}))
     (catch [:status 400] {:keys [body]}
       (log/errorf "Could not find issues in project %s: %s" key body))
 
@@ -42,10 +42,10 @@
     (catch [:status 403] {:keys [body headers]}
       (if (= "AUTHENTICATION_DENIED" (get headers "X-Seraph-LoginReason"))
         (log/error
-         (str "JIRA denied authentication when fetching issues for project " key
-              ". This usually means that JIRA's CAPTCHA feature has been"
-              " triggered for the authenticating user. Log in using the JIRA"
-              " web site and then try again."))
+          (str "JIRA denied authentication when fetching issues for project " key
+               ". This usually means that JIRA's CAPTCHA feature has been"
+               " triggered for the authenticating user. Log in using the JIRA"
+               " web site and then try again."))
         (log/errorf "Unauthorized when fetching issues for project %s." key)))
 
     (catch Object _

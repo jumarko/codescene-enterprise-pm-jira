@@ -7,6 +7,7 @@
                  [ring/ring-defaults "0.2.1" :exclusions [commons-io]]
                  [ring/ring-json "0.4.0"]
                  [ring/ring-codec "1.0.1"]
+                 [io.forward/yaml "1.0.4"]
                  [slingshot "0.12.2"]
                  [clj-http "3.1.0"]
                  [hiccup "1.0.5"]

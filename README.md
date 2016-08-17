@@ -24,6 +24,8 @@ You will need [Leiningen][] 2.0.0 or above installed.
 To start a web server for the application, run:
 
     lein ring server-headless
+    PORT=3001 lein ring server-headless
+    CODESCENE_JIRA_CONFIG=/etc/codescene-jira.yml lein ring server-headless
 
 **TEMPORARY:** Get a project's issues directly from JIRA, run:
 
@@ -34,15 +36,23 @@ To start a web server for the application, run:
 ```yaml
 sync:
   ... # todo
+auth:
+  service:
+    username: {string}
+    password: {string}
+  jira:
+    base-uri: {uri}
+    username: {string}
+    password: {string}
 projects:
   - key: {jira-project-key}
-    costUnit:
+    cost-unit:
       type: {time|numeric}
       format: #optional
-        singular: '{format-string}'
-        plural: '{format-string}'
-    costField: {jira-field-name}
-    supportedWorkTypes: ['{jira-label}']
+        singular: {format-string}
+        plural: {format-string}
+    cost-field: {jira-field-name}
+    supported-work-types: [{jira-label}]
 ```
 
 ### Example Configuration
@@ -50,24 +60,32 @@ projects:
 ```yaml
 sync:
   ... # todo
+auth:
+  service:
+    username: johndoe
+    password: somepwd
+  jira:
+    base-uri: https://jira.example.com
+    username: jirauser
+    password: jirapwd
 projects:
   - key: CSE
-    costUnit:
+    cost-unit:
       type: minutes
-    costField: timeoriginalestimate
-    supportedWorkTypes:
+    cost-field: timeoriginalestimate
+    supported-work-types:
       - Bug
       - Feature
       - Refactoring
       - Documentation
   - key: DVP
-    costUnit:
+    cost-unit:
       type: numeric
       format:
         singular: '%d point'
         plural: '%d points'
-    costField: storypoints
-    supportedWorkTypes:
+    cost-field: storypoints
+    supported-work-types:
       - Bug
       - Feature
       - Refactoring

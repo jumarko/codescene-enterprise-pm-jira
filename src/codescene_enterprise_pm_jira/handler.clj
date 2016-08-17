@@ -19,18 +19,19 @@
 (defn sync-project
   "Tries to sync the JIRA project using the given credentials and the project
   key. Returns nil if successful and a error message string if failed."
-  [username password key]
-  (if-let [project-config (project-config/read-config-for-project key)]
-    (do
-      (log/info "Syncing project" key)
-      (let [cost-field (get project-config :cost-field "timeoriginalestimate")
-            issues (jira/find-issues-with-cost username password key cost-field)]
-        (if (seq issues)
-          (do
-            (storage/replace-project (db/persistent-connection) project-config issues)
-            (log/info "Replaced issues in project" key "with" (count issues) "issues."))
-          (format "Could not get issues from JIRA for project %s." key))))
-    (format "Cannot sync non-configured project %s!" key)))
+  [key]
+  (let [{{{:keys [base-uri username password]} :jira} :auth :as config} (project-config/read-config)]
+    (if-let [project-config (project-config/find-project-in-config config key)]
+      (do
+        (log/info "Syncing project" key)
+        (let [cost-field (get project-config :cost-field "timeoriginalestimate")
+              issues (jira/find-issues-with-cost base-uri username password key cost-field)]
+          (if (seq issues)
+            (do
+              (storage/replace-project (db/persistent-connection) project-config issues)
+              (log/info "Replaced issues in project" key "with" (count issues) "issues."))
+            (format "Could not get issues from JIRA for project %s." key))))
+      (format "Cannot sync non-configured project %s!" key))))
 
 (defn- status-page [error]
   (-> (html5 (html [:h1 "CodeScene Enterprise JIRA Integration"]
@@ -40,12 +41,6 @@
                                  (form/text-field
                                   {:placeholder "Project Key"}
                                   "project-key")
-                                 (form/text-field
-                                  {:placeholder "JIRA User Name"}
-                                  "username")
-                                 (form/password-field
-                                  {:placeholder "JIRA Password"}
-                                  "password")
                                  (form/submit-button "Force Sync"))))
       response
       (content-type "text/html")))
@@ -84,8 +79,8 @@
   (GET "/api/1/projects/:project-id" [project-id]
        (response (get-project project-id)))
 
-  (POST "/sync/force" [username password project-key]
-        (if-let [error-message (sync-project username password project-key)]
+  (POST "/sync/force" [project-key]
+        (if-let [error-message (sync-project project-key)]
           (content-type
            (redirect (str "/?" (form-encode {:error error-message})) :see-other)
            "text/html")
