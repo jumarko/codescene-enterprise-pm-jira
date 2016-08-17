@@ -55,7 +55,9 @@
         work-types (get-work-types-in-project conn project-key)
         issues (get-issues-with-work-types-in-project conn project-key work-types)
         ]
-    (assoc project-config :issues issues)))
+    (merge project-config
+           {:work-types (set (map :type-name work-types))
+            :issues issues})))
 
 (defn replace-project [conn project-config issues]
   (let [project-key (:key project-config)]
