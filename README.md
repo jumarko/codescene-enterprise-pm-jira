@@ -123,7 +123,7 @@ Cache-Control: max-age=14400
   "costUnit": {
     "type": "minutes"
   },
-  "supportedWorkTypes": ["Bug", "Feature", "Refactoring", "Documentation"],
+  "workTypes": ["Bug", "Feature", "Refactoring", "Documentation"],
   "items": [
     {
       "id": "15",

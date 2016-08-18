@@ -80,7 +80,7 @@
      :costUnit  cost-unit
      :workTypes work-types
      :idType    "ticket-id"
-     :issues    (map (partial issue->response ticket-id-pattern work-types-ordered) issues)}))
+     :items     (map (partial issue->response ticket-id-pattern work-types-ordered) issues)}))
 
 (defn- get-project [project-id]
   (-> (storage/get-project (db/persistent-connection) project-id)

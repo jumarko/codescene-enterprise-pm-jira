@@ -13,8 +13,8 @@ projects:
   cost-unit:
     type: numeric
     format:
-      singular: point
-      plural: points
+      singular: '%d point'
+      plural: '%d points'
   supported-work-types:
     - Bug
     - Feature
