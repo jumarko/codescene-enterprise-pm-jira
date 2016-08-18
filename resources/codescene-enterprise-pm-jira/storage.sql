@@ -1,5 +1,6 @@
 -- name: select-project
 SELECT project_key,
+       ticket_id_pattern,
        cost_unit_type,
        cost_unit_format_singular,
        cost_unit_format_plural FROM project_config
@@ -15,10 +16,12 @@ SELECT issue_key, type_name FROM issues_work_types
 
 -- name: insert-project!
 INSERT INTO project_config (project_key,
+                            ticket_id_pattern,
                             cost_unit_type,
                             cost_unit_format_singular,
                             cost_unit_format_plural)
 VALUES (:project_key,
+        :ticket_id_pattern,
         :cost_unit_type,
         :cost_unit_format_singular,
         :cost_unit_format_plural);

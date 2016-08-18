@@ -15,7 +15,17 @@ projects:
     format:
       singular: point
       plural: points
+  supported-work-types:
+    - Bug
+    - Feature
+    - Refactoring
+    - Documentation
+  ticket-id-pattern: CSE2-(\d+)
 - key: PROJ
   cost-field: somecustomfield
   cost-unit:
     type: minutes
+  supported-work-types:
+    - Bug
+    - Documentation
+  ticket-id-pattern: PROJ-(\d+)

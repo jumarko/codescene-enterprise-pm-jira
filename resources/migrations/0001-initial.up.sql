@@ -1,6 +1,7 @@
 CREATE TABLE project_config
 (
   project_key VARCHAR NOT NULL,
+  ticket_id_pattern VARCHAR NOT NULL, 
   cost_unit_type VARCHAR NOT NULL,
   cost_unit_format_singular VARCHAR,
   cost_unit_format_plural VARCHAR,

@@ -59,19 +59,28 @@
   [all v]
   (map #(v %1) all))
 
-(defn- issue->response [all-work-types {:keys [key cost work-types]}]
+(defn- apply-id-pattern [pattern key]
+  (if-let [match (second (re-find (re-pattern pattern) key))]
+    match
+    (throw+ {:msg       (format "Failed to apply pattern '%s' to issue '%s'" pattern key)
+             :issue-key key
+             :pattern   pattern
+             :type      :invalid-ticket-id-pattern})))
+
+(defn- issue->response [ticket-id-pattern all-work-types {:keys [key cost work-types]}]
   (let [work-type-flags (map #(if %1 1 0)
                              (replace-with-nil all-work-types work-types))]
-    {:id    key
+    {:id    (apply-id-pattern ticket-id-pattern key)
      :cost  cost
      :types work-type-flags}))
 
-(defn- project->response [{:keys [key cost-unit work-types issues]}]
+(defn- project->response [{:keys [key cost-unit work-types issues ticket-id-pattern]}]
   (let [work-types-ordered (vec work-types)]
     {:id        key
      :costUnit  cost-unit
      :workTypes work-types
-     :issues    (map (partial issue->response work-types-ordered) issues)}))
+     :idType    "ticket-id"
+     :issues    (map (partial issue->response ticket-id-pattern work-types-ordered) issues)}))
 
 (defn- get-project [project-id]
   (-> (storage/get-project (db/persistent-connection) project-id)

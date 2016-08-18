@@ -47,12 +47,13 @@ auth:
 projects:
   - key: {jira-project-key}
     cost-unit:
-      type: {time|numeric}
+      type: {minutes|numeric}
       format: #optional
         singular: {format-string}
         plural: {format-string}
     cost-field: {jira-field-name}
     supported-work-types: [{jira-label}]
+    ticket-id-pattern: {regex-pattern}
 ```
 
 ### Example Configuration
@@ -78,6 +79,7 @@ projects:
       - Feature
       - Refactoring
       - Documentation
+    ticket-id-pattern: CSE-(\d+)
   - key: DVP
     cost-unit:
       type: numeric
@@ -90,6 +92,7 @@ projects:
       - Feature
       - Refactoring
       - Documentation
+    ticket-id-pattern: DVP-(\d+)
 ```
 
 ## API
@@ -116,23 +119,24 @@ Cache-Control: max-age=14400
 
 {
   "id": "CSE",
+  "idType": "ticket-id",
   "costUnit": {
     "type": "minutes"
   },
   "supportedWorkTypes": ["Bug", "Feature", "Refactoring", "Documentation"],
   "items": [
     {
-      "id": "CSE-15",
+      "id": "15",
       "cost": 12,
       "types": [1, 0, 0, 0]
     },
     {
-      "id": "CSE-21",
+      "id": "21",
       "cost": 4,
       "types": [1, 0, 0, 0]
     },
     {
-      "id": "CSE-181",
+      "id": "181",
       "cost": 42,
       "types": [0, 1, 0, 1]
     }

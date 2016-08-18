@@ -30,17 +30,20 @@
       (let [issue-work-types (map :type-name (get by-key {:key key}))]
         (assoc issue :work-types (set issue-work-types))))))
 
-(defn- project-config->params [{:keys [key cost-unit]}]
+(defn- project-config->params [{:keys [key ticket-id-pattern cost-unit]}]
   {:project_key key
+   :ticket_id_pattern ticket-id-pattern
    :cost_unit_type (:type cost-unit)
    :cost_unit_format_singular (get-in cost-unit [:format :singular])
    :cost_unit_format_plural (get-in cost-unit [:format :plural])})
 
 (defn- row->project-config [{:keys [project_key
+                                    ticket_id_pattern
                                     cost_unit_type
                                     cost_unit_format_singular
                                     cost_unit_format_plural]}]
   {:key project_key
+   :ticket-id-pattern ticket_id_pattern
    :cost-unit (merge {:type cost_unit_type}
                      (when (and cost_unit_format_singular cost_unit_format_plural)
                        {:singular cost_unit_format_singular
