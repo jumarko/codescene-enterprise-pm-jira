@@ -13,6 +13,7 @@
                  [hiccup "1.0.5"]
                  [cheshire "5.6.3"]
                  [ragtime "0.6.3"]
+                 [buddy/buddy-auth "1.1.0"]
                  [com.h2database/h2 "1.4.192"]
                  [org.clojure/java.jdbc "0.6.1"]
                  [com.taoensso/timbre "4.7.0" :exclusions [org.clojure/tools.reader]]

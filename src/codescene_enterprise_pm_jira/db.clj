@@ -2,7 +2,7 @@
   (:require [clojure.java.jdbc :as jdbc]
             [ragtime.jdbc :as ragtime-jdbc]
             [ragtime.repl :as ragtime-repl]
-            [taoensso.timbre :as timbre])
+            [taoensso.timbre :as log])
   (:import (javax.naming InitialContext Context NoInitialContextException)))
 
 (def ^:private default-db-path "./db/codescene-enterprise-pm-jira")
@@ -22,13 +22,13 @@
             (jndi-lookup jndi-path))
     (catch NoInitialContextException e
       (do
-        (timbre/info "No database path set in JNDI on" jndi-path)
+        (log/info "No database path set in JNDI on" jndi-path)
         false))))
 
 (defn- db-physical-path
   []
   (let [db-path (or (path-from-context) default-db-path)]
-    (timbre/info "Starting database located on" db-path)
+    (log/info "Database is located on" db-path)
     db-path))
 
 (defn get-db-spec
@@ -62,4 +62,5 @@
    (init (get-db-spec)))
   ([spec]
    (migrate spec)
-   (reset! db-spec spec)))
+   (reset! db-spec spec)
+   (log/info "Database initialized.")))

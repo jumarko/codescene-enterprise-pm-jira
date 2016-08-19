@@ -1,28 +1,33 @@
 (ns codescene-enterprise-pm-jira.handler
   (:gen-class)
-  (:require [compojure.core :refer :all]
+  (:require [clojure.string :as string]
+            [compojure.core :refer :all]
             [compojure.route :as route]
-            [ring.util.response :refer [response content-type redirect]]
+            [ring.util.response :refer [response content-type redirect status header]]
             [ring.util.codec :refer [form-encode]]
             [ring.middleware.defaults :refer [wrap-defaults api-defaults]]
             [ring.middleware.json :refer [wrap-json-response]]
             [ring.middleware.params :refer [wrap-params]]
+            [buddy.auth :refer [authenticated? throw-unauthorized]]
+            [buddy.auth.backends.httpbasic :refer [http-basic-backend]]
+            [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
+            [buddy.auth.accessrules :refer [restrict]]
             [hiccup.core :refer [html]]
             [hiccup.page :refer [html5]]
             [hiccup.form :as form]
             [taoensso.timbre :as log]
             [codescene-enterprise-pm-jira.db :as db]
             [codescene-enterprise-pm-jira.storage :as storage]
-            [codescene-enterprise-pm-jira.project-config :as project-config]
+            [codescene-enterprise-pm-jira.config :as config]
             [codescene-enterprise-pm-jira.jira :as jira]
             [slingshot.slingshot :refer [try+ throw+]]))
 
 (defn sync-project
-  "Tries to sync the JIRA project using the given credentials and the project
+  "Tries to sync the JIRA project using the given config and the project
   key. Returns nil if successful and a error message string if failed."
-  [key]
-  (let [{{{:keys [base-uri username password]} :jira} :auth :as config} (project-config/read-config)
-        project-config (project-config/find-project-in-config config key)]
+  [{{{:keys [base-uri username password]} :jira} :auth :as config}
+   key]
+  (let [project-config (config/find-project-in-config config key)]
     (when-not project-config
       (throw+
         {:msg         (format "Cannot sync non-configured project %s!" key)
@@ -91,36 +96,72 @@
     (redirect (str "/?" (form-encode {:error msg})) :see-other)
     "text/html"))
 
-(defroutes app-routes
-           (GET "/" [error]
-             (status-page error))
+(def app nil)
 
-           (GET "/api/1/projects/:project-id" [project-id]
-             (response (get-project project-id)))
+(def ^:private ^:const realm "codescene-jira")
 
-           (POST "/sync/force" [project-key]
+(defn- app-routes [config]
+  (-> (routes
+       (GET "/" [error]
+            (status-page error))
+
+       (GET "/api/1/projects/:project-id" [project-id]
+            (response (get-project project-id)))
+
+       (POST "/sync/force" [project-key]
              (try+
-               (sync-project project-key)
-               (content-type
-                 (redirect "/" :see-other)
-                 "text/html")
-               (catch [:type :project-not-configured] {:keys [msg]}
-                 (redirect-with-error msg))
-               (catch [:type :config-not-found] {:keys [msg]}
-                 (redirect-with-error msg))
-               (catch [:type :jira-access-problem] {:keys [msg]}
-                 (redirect-with-error msg))))
-           (route/not-found "Not Found"))
+              (sync-project config project-key)
+              (content-type
+               (redirect "/" :see-other)
+               "text/html")
+              (catch [:type :project-not-configured] {:keys [msg]}
+                (redirect-with-error msg))
+              (catch [:type :config-not-found] {:keys [msg]}
+                (redirect-with-error msg))
+              (catch [:type :jira-access-problem] {:keys [msg]}
+                (redirect-with-error msg))))
+       (route/not-found "Not Found"))
+      (restrict {:handler authenticated?
+                 :on-error (fn [_ _ ]
+                             (-> (response "You need to authenticate.")
+                                 (status 401)
+                                 (content-type "text/plain")
+                                 (header "WWW-Authenticate"
+                                         (str "Basic realm=\"" realm "\""))))})))
 
-(def app
-  (-> app-routes
-      (wrap-params)
-      (wrap-json-response)
-      (wrap-defaults api-defaults)))
+(defn- create-auth-fn [{{service :service} :auth}]
+  {:pre [(not (string/blank? (:username service)))
+         (not (string/blank? (:password service)))]}
+  (fn [req {:keys [username password]}]
+    (and (= (:username service) username)
+         (= (:password service) password))))
+
+(defn- create-auth-backend [config]
+  (http-basic-backend {:realm realm
+                       :authfn (create-auth-fn config)}))
+
+(defn- init-app [config]
+  (alter-var-root
+   #'app
+   (constantly
+    (let [auth-backend (create-auth-backend config)]
+      (-> (app-routes config)
+          (wrap-authentication auth-backend)
+          (wrap-authorization auth-backend)
+          (wrap-params)
+          (wrap-json-response)
+          (wrap-defaults api-defaults))))))
+
+(defn- load-config []
+  (log/info "Loading config...")
+  (let [config (config/read-config)]
+    (log/info "Config loaded.")
+    config))
 
 (defn init []
-  (log/info "init called")
-  (db/init))
+  (let [config (load-config)]
+    (db/init)
+    (init-app config)))
 
 (defn destroy []
   (log/info "destroy called"))
