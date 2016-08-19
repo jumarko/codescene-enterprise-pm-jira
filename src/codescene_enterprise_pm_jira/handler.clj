@@ -154,7 +154,6 @@
           (wrap-defaults api-defaults))))))
 
 (defn- load-config []
-  (log/info "Loading config...")
   (let [config (config/read-config)]
     (log/info "Config loaded.")
     config))

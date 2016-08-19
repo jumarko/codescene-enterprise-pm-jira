@@ -27,10 +27,6 @@ To start a web server for the application, run:
     PORT=3001 lein run
     CODESCENE_JIRA_CONFIG=/etc/codescene-jira.yml lein run
 
-**TEMPORARY:** Get a project's issues directly from JIRA, run:
-
-    curl -u user:pass -X GET "http://jira-integration.codescene.io/rest/api/latest/search?jql=timeoriginalestimate!=EMPTY" -s | jq .issues[].fields.timeoriginalestimate
-
 ## Configuration
 
 ```yaml
@@ -94,6 +90,23 @@ projects:
       - Documentation
     ticket-id-pattern: DVP-(\d+)
 ```
+
+### Configuration Path
+
+The configuration file path is resolved in the following order:
+
+1. Environment variable `CODESCENE_JIRA_CONFIG`, if set.
+1. JNDI context path `codescene/enterprise/pm/jira/config`, if set. Can be
+   configured in Tomcat 7 in `conf/context.xml`, like this:
+   ```
+   <Environment name="codescene/enterprise/pm/jira/config"
+     value="/etc/codescene/codescene-jira.yml"
+     type="java.lang.String"/>
+   ```
+1. The file `codescene-jira.yml` in the current working directory.
+
+If the configuration path doesn't point to a valid YAML file the service
+fails to start.
 
 ## API
 
