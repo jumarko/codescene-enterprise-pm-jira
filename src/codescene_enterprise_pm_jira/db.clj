@@ -11,7 +11,8 @@
 
 (defn- db-physical-path
   []
-  (let [db-path (or (jndi/path-from-context jndi-path)
+  (let [db-path (or (System/getenv "CODESCENE_JIRA_DATABASE_PATH")
+                    (jndi/path-from-context jndi-path)
                     default-db-path)]
     (log/info "Database is located on" db-path)
     db-path))

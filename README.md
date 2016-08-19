@@ -26,6 +26,8 @@ To start a web server for the application, run:
     lein run
     PORT=3001 lein run
     CODESCENE_JIRA_CONFIG=/etc/codescene-jira.yml lein run
+    # Override database path (defaults to db/codescene-enterprise-pm-jira)
+    CODESCENE_JIRA_DATABASE_PATH=/var/lib/codescene/codescene-enterprise-pm-jira lein run
 
 ## Configuration
 
