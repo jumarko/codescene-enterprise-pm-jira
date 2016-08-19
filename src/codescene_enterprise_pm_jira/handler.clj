@@ -8,6 +8,7 @@
             [ring.middleware.defaults :refer [wrap-defaults api-defaults]]
             [ring.middleware.json :refer [wrap-json-response]]
             [ring.middleware.params :refer [wrap-params]]
+            [ring.adapter.jetty :refer [run-jetty]]
             [buddy.auth :refer [authenticated? throw-unauthorized]]
             [buddy.auth.backends.httpbasic :refer [http-basic-backend]]
             [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
@@ -165,3 +166,29 @@
 
 (defn destroy []
   (log/info "destroy called"))
+
+(def ^:private server (atom nil))
+
+(defn- stop-server []
+  (when @server
+    (.stop @server)))
+
+(defn- start-server
+  ([]
+   (start-server {}))
+  ([options]
+   (init)
+   (stop-server)
+   (let [port (or (some-> (System/getenv "PORT")
+                          Integer/parseInt)
+                  3004)]
+     (log/infof "Starting server at port %d..." port)
+     (reset! server
+             (run-jetty
+              app
+              (merge {:port port
+                      :join? false}
+                     options))))))
+
+(defn -main [& args]
+  (start-server {:join? true}))

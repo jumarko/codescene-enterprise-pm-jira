@@ -23,9 +23,9 @@ You will need [Leiningen][] 2.0.0 or above installed.
 
 To start a web server for the application, run:
 
-    lein ring server-headless
-    PORT=3001 lein ring server-headless
-    CODESCENE_JIRA_CONFIG=/etc/codescene-jira.yml lein ring server-headless
+    lein run
+    PORT=3001 lein run
+    CODESCENE_JIRA_CONFIG=/etc/codescene-jira.yml lein run
 
 **TEMPORARY:** Get a project's issues directly from JIRA, run:
 

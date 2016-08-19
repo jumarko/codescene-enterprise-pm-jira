@@ -5,6 +5,7 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [compojure "1.5.1" :exclusions [commons-io]]
                  [ring/ring-defaults "0.2.1" :exclusions [commons-io]]
+                 [ring/ring-jetty-adapter "1.5.0"]
                  [ring/ring-json "0.4.0"]
                  [ring/ring-codec "1.0.1"]
                  [io.forward/yaml "1.0.4"]
@@ -18,19 +19,21 @@
                  [org.clojure/java.jdbc "0.6.1"]
                  [com.taoensso/timbre "4.7.0" :exclusions [org.clojure/tools.reader]]
                  [yesql "0.5.3"]]
-  :plugins [[lein-ring "0.9.7"]
-            [lein-uberwar "0.2.0"]]
-  :ring {:handler codescene-enterprise-pm-jira.handler/app
-         :init codescene-enterprise-pm-jira.handler/init
-         :destroy codescene-enterprise-pm-jira.handler/destroy}
+
+  :plugins [[lein-uberwar "0.2.0"]]
+
   :uberwar {:handler codescene-enterprise-pm-jira.handler/app
             :init codescene-enterprise-pm-jira.handler/init
             :destroy codescene-enterprise-pm-jira.handler/destroy
             :name "codescene-enterprise-pm-jira.war"}
+
   :uberjar-name "codescene-enterprise-pm-jira.standalone.jar"
   :profiles
   {:dev {:dependencies [[javax.servlet/servlet-api "2.5"]
                         [ring/ring-mock "0.3.0"]]}}
+
+  :main codescene-enterprise-pm-jira.handler
   :aot [codescene-enterprise-pm-jira.handler]
-  :release-tasks [["ring" "uberjar"]
+
+  :release-tasks [["uberjar"]
                   ["uberwar"]])
