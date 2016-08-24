@@ -30,3 +30,6 @@
         "Configuration contains more than one project with the key %s, using the first one."
         key))
     (first matching)))
+
+(defn project-keys-in-config [{:keys [projects]}]
+  (filter identity (map :key projects)))

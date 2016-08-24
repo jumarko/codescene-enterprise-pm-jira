@@ -8,13 +8,14 @@
             [ring.middleware.defaults :refer [wrap-defaults api-defaults]]
             [ring.middleware.json :refer [wrap-json-response]]
             [ring.middleware.params :refer [wrap-params]]
+            [ring.middleware.resource :refer [wrap-resource]]
             [ring.adapter.jetty :refer [run-jetty]]
             [buddy.auth :refer [authenticated? throw-unauthorized]]
             [buddy.auth.backends.httpbasic :refer [http-basic-backend]]
             [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
             [buddy.auth.accessrules :refer [restrict]]
             [hiccup.core :refer [html]]
-            [hiccup.page :refer [html5]]
+            [hiccup.page :refer [html5 include-css]]
             [hiccup.form :as form]
             [taoensso.timbre :as log]
             [codescene-enterprise-pm-jira.db :as db]
@@ -24,15 +25,42 @@
             [codescene-enterprise-pm-jira.sync :as sync]
             [slingshot.slingshot :refer [try+ throw+]]))
 
-(defn- status-page [error]
-  (-> (html5 (html [:h1 "CodeScene Enterprise JIRA Integration"]
-                   (when error
-                     [:div.error error])
-                   (form/form-to [:post "/sync/force"]
-                                 (form/text-field
-                                   {:placeholder "Project Key"}
-                                   "project-key")
-                                 (form/submit-button "Force Sync"))))
+(defn- layout [& forms]
+  (html5
+   (include-css "/vendor/bootstrap/css/bootstrap.min.css")
+   (html
+    [:div.container
+     forms])))
+
+(defn- status-page [config message error]
+  (-> (layout
+       [:div.row
+        [:div.col-lg-12
+         [:div
+          [:h1 "CodeScene Enterprise JIRA Integration"]]
+         [:hr]
+         (when message
+           [:div.alert.alert-success message])
+         (when error
+           [:div.alert.alert-danger error])]
+        [:div.col-sm-6
+         [:div.panel.panel-default
+          [:div.panel-heading "Force Project Sync"]
+          [:div.panel-body
+           (form/form-to
+            [:post "/sync/force"]
+
+            [:div.form-group
+             (form/label
+              "project-key"
+              "Project Key")
+             [:div
+              (form/drop-down
+               {:id "project-key"}
+               "project-key"
+               (config/project-keys-in-config config))]]
+            [:div.form-group
+             (form/submit-button {:class "btn btn-success"} "Force Sync")])]]]])
       response
       (content-type "text/html")))
 
@@ -72,10 +100,10 @@
   (-> (storage/get-project (db/persistent-connection) project-id)
       project->response))
 
-(defn- redirect-with-error [msg]
+(defn- redirect-with-query [query]
   (content-type
-    (redirect (str "/?" (form-encode {:error msg})) :see-other)
-    "text/html"))
+   (redirect (str "/?" (form-encode query)) :see-other)
+   "text/html"))
 
 (def app nil)
 
@@ -83,8 +111,8 @@
 
 (defn- app-routes [config]
   (-> (routes
-       (GET "/" [error]
-            (status-page error))
+       (GET "/" [message error]
+            (status-page config message error))
 
        (GET "/api/1/projects/:project-id" [project-id]
             (response (get-project project-id)))
@@ -92,15 +120,14 @@
        (POST "/sync/force" [project-key]
              (try+
               (sync/sync-project-with-key config project-key)
-              (content-type
-               (redirect "/" :see-other)
-               "text/html")
+              (redirect-with-query
+               {:message (format "Successfully synced project %s." project-key)})
               (catch [:type :project-not-configured] {:keys [msg]}
-                (redirect-with-error msg))
+                (redirect-with-query {:error msg}))
               (catch [:type :config-not-found] {:keys [msg]}
-                (redirect-with-error msg))
+                (redirect-with-query {:error msg}))
               (catch [:type :jira-access-problem] {:keys [msg]}
-                (redirect-with-error msg))))
+                (redirect-with-query {:error msg}))))
        (route/not-found "Not Found"))
       (restrict {:handler authenticated?
                  :on-error (fn [_ _ ]
@@ -127,6 +154,7 @@
    (constantly
     (let [auth-backend (create-auth-backend config)]
       (-> (app-routes config)
+          (wrap-resource "public")
           (wrap-authentication auth-backend)
           (wrap-authorization auth-backend)
           (wrap-params)
@@ -150,9 +178,10 @@
 (def ^:private server (atom nil))
 
 (defn stop-server []
-  (scheduling/stop-scheduled-sync)
   (when @server
-    (.stop @server)))
+    (.stop @server)
+    (reset! server nil))
+  (scheduling/stop-scheduled-sync))
 
 (defn start-server
   ([]
@@ -167,12 +196,12 @@
        (scheduling/start-scheduled-sync true user-config))
 
      (log/infof "Starting server at port %d..." port)
-     (reset! server
-             (run-jetty
-              app
-              (merge {:port port
-                      :join? false}
-                     options))))))
+     (let [jetty-server (run-jetty
+                         app
+                         (merge {:port port
+                                 :join? false}
+                                options))]
+       (reset! server jetty-server)))))
 
 (defn start-server-without-period-sync []
   (start-server {:with-period-sync false}))
