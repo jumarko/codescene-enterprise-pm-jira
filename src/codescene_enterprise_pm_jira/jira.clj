@@ -25,7 +25,9 @@
    :cost       (get fields (keyword cost-field-name))
    :work-types (set (:labels fields))})
 
-(defn find-issues-with-cost [base-uri username password key cost-field-name]
+(defn find-issues-with-cost
+  "Fetches issues from the remote JIRA API. Returns nil when the API calls fail."
+  [base-uri username password key cost-field-name]
   (try+
     (map (partial jira-issue->db-format cost-field-name)
          (get-paged-data base-uri {:basic-auth   [username password]
@@ -47,6 +49,9 @@
                " triggered for the authenticating user. Log in using the JIRA"
                " web site and then try again."))
         (log/errorf "Unauthorized when fetching issues for project %s." key)))
+
+    (catch java.net.SocketTimeoutException e
+      (log/errorf "Socket timeout when fetching issues for project %s: %s" key e))
 
     (catch Object _
       (log/errorf "Unexpected error when fetching issues for project %s: %s"

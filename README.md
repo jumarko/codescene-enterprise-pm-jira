@@ -33,7 +33,7 @@ To start a web server for the application, run:
 
 ```yaml
 sync:
-  ... # todo
+  hour-interval: {number}
 auth:
   service:
     username: {string}
@@ -58,7 +58,7 @@ projects:
 
 ```yaml
 sync:
-  ... # todo
+  hour-interval: 4 # sync every 4 hours
 auth:
   service:
     username: johndoe

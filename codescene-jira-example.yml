@@ -1,4 +1,6 @@
-sync: null
+sync:
+  # sync every 4 hours
+  hour-interval: 4
 auth:
   service:
     username: johndoe

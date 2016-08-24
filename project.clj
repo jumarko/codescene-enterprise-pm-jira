@@ -3,6 +3,7 @@
   :url "https://github.com/empear-analytics/codescene-enterprise-pm-jira"
   :min-lein-version "2.0.0"
   :dependencies [[org.clojure/clojure "1.8.0"]
+                 [org.clojure/core.async "0.2.385"]
                  [compojure "1.5.1" :exclusions [commons-io]]
                  [ring/ring-defaults "0.2.1" :exclusions [commons-io]]
                  [ring/ring-jetty-adapter "1.5.0" :exclusions [commons-io]]

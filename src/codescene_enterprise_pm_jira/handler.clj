@@ -20,29 +20,9 @@
             [codescene-enterprise-pm-jira.db :as db]
             [codescene-enterprise-pm-jira.storage :as storage]
             [codescene-enterprise-pm-jira.config :as config]
-            [codescene-enterprise-pm-jira.jira :as jira]
+            [codescene-enterprise-pm-jira.scheduling :as scheduling]
+            [codescene-enterprise-pm-jira.sync :as sync]
             [slingshot.slingshot :refer [try+ throw+]]))
-
-(defn sync-project
-  "Tries to sync the JIRA project using the given config and the project
-  key. Returns nil if successful and a error message string if failed."
-  [{{{:keys [base-uri username password]} :jira} :auth :as config}
-   key]
-  (let [project-config (config/find-project-in-config config key)]
-    (when-not project-config
-      (throw+
-        {:msg         (format "Cannot sync non-configured project %s!" key)
-         :project-key key
-         :type        :project-not-configured}))
-    (log/info "Syncing project" key)
-    (let [cost-field (get project-config :cost-field "timeoriginalestimate")
-          issues (jira/find-issues-with-cost base-uri username password key cost-field)]
-      (when-not (seq issues)
-        (throw+ {:msg         (format "Could not get issues from JIRA for project %s." key)
-                 :project-key key
-                 :type        :jira-access-problem}))
-      (storage/replace-project (db/persistent-connection) project-config issues)
-      (log/info "Replaced issues in project" key "with" (count issues) "issues."))))
 
 (defn- status-page [error]
   (-> (html5 (html [:h1 "CodeScene Enterprise JIRA Integration"]
@@ -111,7 +91,7 @@
 
        (POST "/sync/force" [project-key]
              (try+
-              (sync-project config project-key)
+              (sync/sync-project-with-key config project-key)
               (content-type
                (redirect "/" :see-other)
                "text/html")
@@ -141,7 +121,7 @@
   (http-basic-backend {:realm realm
                        :authfn (create-auth-fn config)}))
 
-(defn- init-app [config]
+(defn init-app [config]
   (alter-var-root
    #'app
    (constantly
@@ -161,26 +141,31 @@
 (defn init []
   (let [config (load-config)]
     (db/init)
-    (init-app config)))
+    (init-app config)
+    config))
 
 (defn destroy []
   (log/info "destroy called"))
 
 (def ^:private server (atom nil))
 
-(defn- stop-server []
+(defn stop-server []
+  (scheduling/stop-scheduled-sync)
   (when @server
     (.stop @server)))
 
-(defn- start-server
+(defn start-server
   ([]
-   (start-server {}))
+   (start-server {:with-period-sync true}))
   ([options]
-   (init)
    (stop-server)
-   (let [port (or (some-> (System/getenv "PORT")
+   (let [user-config (init)
+         port (or (some-> (System/getenv "PORT")
                           Integer/parseInt)
                   3004)]
+     (when (:with-period-sync options)
+       (scheduling/start-scheduled-sync true user-config))
+
      (log/infof "Starting server at port %d..." port)
      (reset! server
              (run-jetty
@@ -188,6 +173,9 @@
               (merge {:port port
                       :join? false}
                      options))))))
+
+(defn start-server-without-period-sync []
+  (start-server {:with-period-sync false}))
 
 (defn -main [& args]
   (start-server {:join? true}))
