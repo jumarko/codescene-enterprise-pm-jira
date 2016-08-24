@@ -17,6 +17,8 @@
             [hiccup.core :refer [html]]
             [hiccup.page :refer [html5 include-css]]
             [hiccup.form :as form]
+            [hiccup.util :refer [*base-url*]]
+            [hiccup.middleware :refer [wrap-base-url]]
             [taoensso.timbre :as log]
             [codescene-enterprise-pm-jira.db :as db]
             [codescene-enterprise-pm-jira.storage :as storage]
@@ -102,7 +104,7 @@
 
 (defn- redirect-with-query [query]
   (content-type
-   (redirect (str "/?" (form-encode query)) :see-other)
+   (redirect (str *base-url* "/?" (form-encode query)) :see-other)
    "text/html"))
 
 (def app nil)
@@ -128,6 +130,7 @@
                 (redirect-with-query {:error msg}))
               (catch [:type :jira-access-problem] {:keys [msg]}
                 (redirect-with-query {:error msg}))))
+
        (route/not-found "Not Found"))
       (restrict {:handler authenticated?
                  :on-error (fn [_ _ ]
@@ -154,6 +157,7 @@
    (constantly
     (let [auth-backend (create-auth-backend config)]
       (-> (app-routes config)
+          wrap-base-url
           (wrap-resource "public")
           (wrap-authentication auth-backend)
           (wrap-authorization auth-backend)
@@ -175,12 +179,11 @@
 (defn destroy []
   (log/info "destroy called"))
 
-(def ^:private server (atom nil))
+(defonce ^:private server (atom nil))
 
 (defn stop-server []
   (when @server
-    (.stop @server)
-    (reset! server nil))
+    (.stop @server))
   (scheduling/stop-scheduled-sync))
 
 (defn start-server
