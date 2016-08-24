@@ -22,7 +22,7 @@
 
 (defn- jira-issue->db-format [cost-field-name {:keys [fields key] :as issue}]
   {:key        key
-   :cost       (get fields (keyword cost-field-name))
+   :cost       (get fields (keyword cost-field-name) 0)
    :work-types (set (:labels fields))})
 
 (defn find-issues-with-cost

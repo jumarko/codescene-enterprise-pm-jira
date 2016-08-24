@@ -6,11 +6,12 @@ A *Project Management* service which integrates JIRA with CodeScene Enterprise.
 
 This service:
 
-- [ ] Periodically syncs issues from JIRA
-- [ ] Stores issues in a local database
-- [ ] Syncs only issues with cost values set
+- [x] Periodically syncs issues from JIRA
+- [x] Stores issues in a local database
+- [x] Syncs only issues with cost values set
+- [x] Cost unit type can be configured
+- [ ] A custom "fallback cost" can be configured where value is missing
 - [ ] Supported *types of work* can be configured
-- [ ] Cost unit type can be configured
 - [ ] JIRA Labels can be mapped to types of work in configuration
 
 ## Prerequisites
@@ -115,7 +116,7 @@ fails to start.
 ### `GET /api/1/projects/{id}`
 
 Returns a project including all its synced items. Each item has an array of
-numbers, 0 or 1, corresponding to the work types in `"supportedWorkTypes"` of
+numbers, 0 or 1, corresponding to the work types in `"workTypes"` of
 the project. 1 means it has the work type, 0 means it doesn't.
 
 #### Example Request
@@ -156,6 +157,32 @@ Cache-Control: max-age=14400
       "types": [0, 1, 0, 1]
     }
   ]
+}
+```
+
+### `GET /api/1/status`
+
+Returns the status and basic information of the service. Should respond with
+a HTTP status of 200 for signaling that it is available and functional, and
+503 if it's unavailable or not functioning.
+
+#### Example Request
+
+```bash
+curl -i -X GET -H 'Accept: application/json' -u 'user:pass' https://jira-integration.codescene.io/api/1/status
+```
+
+#### Example Response
+
+```json
+HTTP/1.1 200 OK
+...
+Content-Type: application/json;charset=UTF-8
+Cache-Control: max-age=0
+
+{
+  "status": "ok",
+  "name": "My Project Management System"
 }
 ```
 

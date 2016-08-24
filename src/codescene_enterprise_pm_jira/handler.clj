@@ -116,6 +116,10 @@
        (GET "/" [message error]
             (status-page config message error))
 
+       (GET "/api/1/status" []
+            (-> (response {:status :ok
+                           :name "CodeScene EnterPrise JIRA Integration"})))
+
        (GET "/api/1/projects/:project-id" [project-id]
             (response (get-project project-id)))
 
