@@ -36,5 +36,14 @@
   :main codescene-enterprise-pm-jira.handler
   :aot [codescene-enterprise-pm-jira.handler]
 
-  :release-tasks [["uberjar"]
-                  ["uberwar"]])
+  :release-tasks [["vcs" "assert-committed"]
+                  ["change" "version"
+                   "leiningen.release/bump-version" "release"]
+                  ["vcs" "commit"]
+                  ["vcs" "tag" "v" "--no-sign"]
+                  ["uberjar"]
+                  ["uberwar"]
+                  ["install"]
+                  ["change" "version" "leiningen.release/bump-version"]
+                  ["vcs" "commit"]
+                  ["vcs" "push"]])
