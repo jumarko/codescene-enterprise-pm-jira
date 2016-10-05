@@ -12,7 +12,7 @@
    {:keys [key] :as project-config}]
   (log/info "Syncing project" key)
   (let [cost-field (get project-config :cost-field "timeoriginalestimate")
-        issues (jira/find-issues-with-cost base-uri username password key cost-field)]
+        issues (jira/find-issues-with-cost base-uri username password project-config cost-field)]
     (when-not (seq issues)
       (throw+ {:msg         (format "Could not get issues from JIRA for project %s." key)
                :project-key key

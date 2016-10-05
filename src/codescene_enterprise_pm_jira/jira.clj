@@ -27,18 +27,29 @@
     (clojure.set/union labels #{issue-type})
     labels))
 
-(defn- jira-issue->db-format [cost-field-name {:keys [fields key] :as _issue}]
+(defn- keep-supported-work-types
+  [supported-work-types found-work-types]
+  {:pre [(set? supported-work-types) (set? found-work-types)]}
+  (clojure.set/intersection found-work-types supported-work-types))
+
+(defn- work-types-from
+  [fields supported-work-types]
   (let [issue-type (get-in fields [:issuetype :name])
         labels (set (:labels fields))]
-    {:key        key
-     :cost       (get fields (keyword cost-field-name) 0)
-     :work-types (combine-labels-with-issue-type labels issue-type)}))
+    (->> issue-type
+         (combine-labels-with-issue-type labels)
+         (keep-supported-work-types supported-work-types))))
+
+(defn- jira-issue->db-format [cost-field-name supported-work-types {:keys [fields key] :as _issue}]
+  {:key        key
+   :cost       (get fields (keyword cost-field-name) 0)
+   :work-types (work-types-from fields supported-work-types)})
 
 (defn find-issues-with-cost
   "Fetches issues from the remote JIRA API. Returns nil when the API calls fail."
-  [base-uri username password key cost-field-name]
+  [base-uri username password {:keys [key supported-work-types] :as _project-config} cost-field-name]
   (try+
-    (map (partial jira-issue->db-format cost-field-name)
+    (map (partial jira-issue->db-format cost-field-name (set supported-work-types))
          (get-paged-data base-uri {:basic-auth   [username password]
                                    :accept       :json
                                    :query-params {:jql (format "project=%s and %s!=EMPTY"
