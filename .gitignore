@@ -11,3 +11,4 @@ pom.xml.asc
 *.iml
 /db
 /codescene-jira.yml
+.idea
