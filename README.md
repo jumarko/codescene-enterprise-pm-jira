@@ -10,8 +10,9 @@ This service:
 - [x] Stores issues in a local database
 - [x] Syncs only issues with cost values set
 - [x] Cost unit type can be configured
+- [x] Supported *types of work* can be configured
+- [x] *type of work* can be combinations of JIRA Labels and Issue Types
 - [ ] A custom "fallback cost" can be configured where value is missing
-- [ ] Supported *types of work* can be configured
 - [ ] JIRA Labels can be mapped to types of work in configuration
 
 ## Prerequisites
@@ -54,6 +55,9 @@ projects:
     supported-work-types: [{jira-label}]
     ticket-id-pattern: {regex-pattern}
 ```
+
+The `supported-work-types` specify the JIRA labels and/or JIRA Issue Types you want to include in the analysis.
+Please note that only types with the listed labels/type will be included in the analysis.
 
 ### Example Configuration
 
