@@ -83,11 +83,17 @@
              :pattern   pattern
              :type      :invalid-ticket-id-pattern})))
 
+(defn- jira-seconds->minutes
+  "The JIRA API reports costs in seconds, but we use minutes for our internal format.
+   In the future we'll support a more dynamic configuration."
+  [cost]
+  (/ cost 60))
+
 (defn- issue->response [ticket-id-pattern all-work-types {:keys [key cost work-types]}]
   (let [work-type-flags (map #(if %1 1 0)
                              (replace-with-nil all-work-types work-types))]
     {:id    (apply-id-pattern ticket-id-pattern key)
-     :cost  cost
+     :cost  (jira-seconds->minutes cost)
      :types work-type-flags}))
 
 (defn- project->response [{:keys [key cost-unit work-types issues ticket-id-pattern]}]

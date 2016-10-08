@@ -13,14 +13,27 @@
       (jndi/path-from-context config-file-setting-jndi-path)
       "codescene-jira.yml"))
 
+(def ^:private only-supported-cost-unit "minutes")
+
+(defn- validate
+  [{:keys [projects] :as complete-config}]
+  (doseq [{:keys [key cost-unit]} projects]
+    (let [configured-unit (:type cost-unit)]
+      (when-not (= configured-unit only-supported-cost-unit)
+        (throw+ {:msg (str "The config for project " key " specifies an unsupported cost-unit: found '" configured-unit
+                           "' but we only support " only-supported-cost-unit)
+                 :type :invalid-config}))))
+  complete-config)
+
 (defn read-config
   ([] (read-config (get-config-file-name)))
   ([filename]
    (log/info "Reading config at" filename)
-   (or (yaml/from-file filename true)
-       (throw+ {:msg (str "No config found at " filename)
-                :type :config-not-found
-                :path filename}))))
+   (validate
+     (or (yaml/from-file filename true)
+         (throw+ {:msg (str "No config found at " filename)
+                  :type :config-not-found
+                  :path filename})))))
 
 (defn find-project-in-config [config key]
   (let [projects (:projects config)
