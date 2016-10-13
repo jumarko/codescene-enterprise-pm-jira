@@ -23,13 +23,27 @@ You will need [Leiningen][] 2.0.0 or above installed.
 
 ## Running
 
-To start a web server for the application, run:
+### Running from the Command Line during development
+
+To start a web server for the application from the command line, run:
 
     lein run
     PORT=3001 lein run
     CODESCENE_JIRA_CONFIG=/etc/codescene-jira.yml lein run
     # Override database path (defaults to db/codescene-enterprise-pm-jira)
     CODESCENE_JIRA_DATABASE_PATH=/var/lib/codescene/codescene-enterprise-pm-jira lein run
+
+### Running in Tomcat for deployment
+
+To start a web server in Tomcat, you need to specify the required JNDI context paths in the file `conf/Context.xml` in Tomcat 7.
+Here's an example configuration that you want to add to `conf/Context.xml``:
+
+    <Environment name="codescene/enterprise/pm/jira/config" value="/mydocs/codescene/codescene-jira.yml" type="java.lang.String"/>
+
+    <Environment name="codescene/enterprise/pm/jira/dbpath" value="/mydocs/codescene/db/codescene-enterprise-pm-jira" type="java.lang.String"/>
+
+When run in Tomcat, the application uses the paths above to resolve both the configuration file and the internal database for
+JIRA synchronization data.
 
 ## Configuration
 
