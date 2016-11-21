@@ -9,7 +9,7 @@ This service:
 - [x] Periodically syncs issues from JIRA
 - [x] Stores issues in a local database
 - [x] Syncs only issues with cost values set
-- [ ] Cost unit type can be configured
+- [x] Cost unit type can be configured
 - [x] Supported *types of work* can be configured
 - [x] *type of work* can be combinations of JIRA Labels and Issue Types
 - [ ] A custom "fallback cost" can be configured where value is missing
@@ -61,7 +61,7 @@ auth:
 projects:
   - key: {jira-project-key}
     cost-unit:
-      type: {minutes}
+      type: {minutes|points}
       format: #optional
         singular: {format-string}
         plural: {format-string}
@@ -73,8 +73,7 @@ projects:
 The `supported-work-types` specify the JIRA labels and/or JIRA Issue Types you want to include in the analysis.
 Please note that only types with the listed labels/type will be included in the analysis.
 
-Also note that the service only supports a cost-unit of type `minutes`.
-We'll add support for other types of cost (e.g. story points) in later versions.
+The cost-unit type has to be either `minutes` or `points` (e.g. story points).
 
 ### Example Configuration
 

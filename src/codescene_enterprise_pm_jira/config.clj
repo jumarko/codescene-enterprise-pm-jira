@@ -13,15 +13,15 @@
       (jndi/path-from-context config-file-setting-jndi-path)
       "codescene-jira.yml"))
 
-(def ^:private only-supported-cost-unit "minutes")
+(def ^:private supported-cost-units #{"minutes" "points"})
 
 (defn- validate
   [{:keys [projects] :as complete-config}]
   (doseq [{:keys [key cost-unit]} projects]
     (let [configured-unit (:type cost-unit)]
-      (when-not (= configured-unit only-supported-cost-unit)
+      (when-not (supported-cost-units configured-unit)
         (throw+ {:msg (str "The config for project " key " specifies an unsupported cost-unit: found '" configured-unit
-                           "' but we only support " only-supported-cost-unit)
+                           "' but we only support " (clojure.string/join "," supported-cost-units))
                  :type :invalid-config}))))
   complete-config)
 
