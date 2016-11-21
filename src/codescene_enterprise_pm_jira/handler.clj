@@ -90,25 +90,25 @@
   (/ cost 60))
 
 (defn- convert-cost
-  [cost {:keys [cost-unit]}]
-  (if (= cost-unit "minutes")
+  [cost {:keys [cost-unit] :as p}]
+  (if (= (:type cost-unit) "minutes")
     (jira-seconds->minutes cost)
     cost))
 
-(defn- issue->response [ticket-id-pattern all-work-types {:keys [key cost work-types] :as project}]
+(defn- issue->response [ticket-id-pattern all-work-types project {:keys [key cost work-types]}]
   (let [work-type-flags (map #(if %1 1 0)
                              (replace-with-nil all-work-types work-types))]
     {:id    (apply-id-pattern ticket-id-pattern key)
      :cost  (convert-cost cost project)
      :types work-type-flags}))
 
-(defn- project->response [{:keys [key cost-unit work-types issues ticket-id-pattern]}]
+(defn- project->response [{:keys [key cost-unit work-types issues ticket-id-pattern] :as project}]
   (let [work-types-ordered (vec work-types)]
     {:id        key
      :costUnit  cost-unit
      :workTypes work-types
      :idType    "ticket-id"
-     :items     (map (partial issue->response ticket-id-pattern work-types-ordered) issues)}))
+     :items     (map (partial issue->response ticket-id-pattern work-types-ordered project) issues)}))
 
 (defn- get-project [project-id]
   (-> (storage/get-project (db/persistent-connection) project-id)
