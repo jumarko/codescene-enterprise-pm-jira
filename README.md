@@ -101,8 +101,11 @@ projects:
     ticket-id-pattern: (CSE-\d+)
   - key: DVP
     cost-unit:
-      type: minutes
-    cost-field: timeoriginalestimate
+      type: points
+        format:
+          singular: '%d point'
+          plural: '%d points'
+    cost-field: customfield_10006
     supported-work-types:
       - Bug
       - Feature
@@ -229,6 +232,98 @@ Getting the project back:
           {:cost 25, :key "CSE-2", :work-types #{"Documentation" "Feature"}}
           {:cost 5, :key "CSE-3", :work-types #{"Bug"}})}
 ```
+
+## Using Story Points in JIRA
+
+When JIRA is configured to use Story Points as estimate for stories, 
+epics, and possibly other issue types, the points will be added in a
+custom field JIRA creates for this purpose when Story Points is configured.
+The custom field will get a generated id. In order to be able to configure 
+the PM integration service correctly, this custom field needs to be identified.
+The following command (against the JIRA service) using `curl` and `jq`
+will filter out the custom field for a project with the key `CSE2` 
+(see [Atlassian Answers](https://answers.atlassian.com/questions/180944/custom-field-name-in-jira-json)):
+
+```
+$ curl -u 'jirauser:jirapwd' \
+'https://jira.example.com/rest/api/latest/issue/createmeta?expand=projects.issuetypes.fields'\
+|jq '.projects[]|select(.key=="CSE2")|.issuetypes[]|select(.name=="Story")|.fields|with_entries(select(.value.name=="Story Points"))'
+{
+  "customfield_10006": {
+    "required": false,
+    "schema": {
+      "type": "number",
+      "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+      "customId": 10006
+    },
+    "name": "Story Points",
+    "hasDefaultValue": false,
+    "operations": [
+      "set"
+    ]
+  }
+}
+```
+
+You can verify that this is in fact the field with the Story Points. Say
+that you already have a story `CSE2-257` with `Estimate: 4` filled in, then 
+you can find the field name and verify the points with this command:
+
+```
+$ curl -u 'jirauser:jirapwd' \
+https://jira.example.com/rest/api/latest/issue/CSE2-257
+{
+  ...
+  "fields": {
+    ...
+    "timetracking": {},
+    "customfield_10006": 4,
+```
+
+This field name can then be placed in the configuration file:
+
+```yaml
+    cost-unit:
+      type: points
+        format:
+          singular: '%d point'
+          plural: '%d points'
+    cost-field: customfield_10006
+```
+
+When using Minutes instead of Points, the sync performs a search for the 
+configured field name, usually `timeoriginalestimate`, having a non-empty value:
+
+```
+curl -u 'jirauser:jirapwd' \
+'https://jira.example.com/rest/api/latest/search?jql=project=CSE2+and+timeoriginalestimate!=NULL'
+```
+
+Custom fields, however, cannot be searched like regular fields. Unfortunately,
+it seems it's not possible to just use the complete field name, `customfield_10006`:
+
+```
+$ curl -u 'jirauser:jirapwd' \
+'https://jira.example.com/rest/api/latest/search?jql=project=CSE2+and+customfield_10006!=NULL'
+{
+  "errorMessages": [
+    "Field 'customfield_10006' does not exist or you do not have permission to view it."
+  ],
+  "errors": {}
+}
+```
+
+Instead, there is a variant that uses `cf[ID]` (see [JIRA documentation](https://confluence.atlassian.com/jirasoftwarecloud/advanced-searching-fields-reference-764478339.html#Advancedsearching-fieldsreference-customCustomfield)), where `ID` is the id of the
+custom field, in our case `10006`. Note that the brackets must be URL-encoded,
+so `cf[10006]` turns into `cf%5B10006%5D`:
+
+```
+curl -u 'jirauser:jirapwd' \
+'https://jira.example.com/rest/api/latest/search?jql=project=CSE2+and+cf%5B10006%5D!=NULL'|jq .
+```
+
+This means that the code for sync must detect whether a custom field is 
+being used, extract the id, and use that in the query.
 
 ## License
 
