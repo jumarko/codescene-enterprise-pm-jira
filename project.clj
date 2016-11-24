@@ -1,4 +1,4 @@
-(defproject codescene-enterprise-pm-jira "0.2.2"
+(defproject codescene-enterprise-pm-jira "0.2.3-SNAPSHOT"
   :description "A Project Management service which integrates JIRA with CodeScene Enterprise"
   :url "https://github.com/empear-analytics/codescene-enterprise-pm-jira"
   :min-lein-version "2.0.0"
