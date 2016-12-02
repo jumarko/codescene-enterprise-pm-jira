@@ -3,6 +3,7 @@
   :url "https://github.com/empear-analytics/codescene-enterprise-pm-jira"
   :min-lein-version "2.0.0"
   :dependencies [[org.clojure/clojure "1.8.0"]
+                 [clojure-future-spec "1.9.0-alpha14"]
                  [org.clojure/core.async "0.2.385"]
                  [compojure "1.5.1" :exclusions [commons-io]]
                  [ring/ring-defaults "0.2.1" :exclusions [commons-io]]
@@ -29,9 +30,18 @@
             :name "codescene-enterprise-pm-jira.war"}
 
   :uberjar-name "codescene-enterprise-pm-jira.standalone.jar"
-  :profiles
-  {:dev {:dependencies [[javax.servlet/servlet-api "2.5"]
-                        [ring/ring-mock "0.3.0"]]}}
+
+  :profiles {:test           [:test-common :test-overrides]
+             :test-overrides {}
+             :test-common    [:dev-common]
+             :dev            [:dev-common :dev-overrides]
+             :dev-overrides  {}
+             :dev-common     {:injections   [(require 'clojure.spec.test)
+                                             (clojure.spec.test/instrument)
+                                             (.println System/err "Instrumented specs")]
+                              :dependencies [[javax.servlet/servlet-api "2.5"]
+                                             [ring/ring-mock "0.3.0"]
+                                             [org.clojure/test.check "0.9.0"]]}}
 
   :main codescene-enterprise-pm-jira.handler
   :aot [codescene-enterprise-pm-jira.handler]
