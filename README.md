@@ -222,7 +222,7 @@ Adding/replacing a project with some test data:
 > (def conn (codescene-enterprise-pm-jira.db/persistent-connection))
 > (replace-project conn
     {:key "CSE"
-     :cost-unit {:type "numeric"
+     :cost-unit {:type "points"
                  :format {:singular "point" :plural "points"}}}
     [{:key "CSE-1" :cost 10 :work-types ["Bug" "Documentation"]}
      {:key "CSE-2" :cost 25 :work-types ["Feature" "Documentation"]}
@@ -235,7 +235,7 @@ Getting the project back:
 > (get-project conn "CSE")
 ;=>
 {:key "CSE",
- :cost-unit {:type "numeric", :singular "point", :plural "points"},
+ :cost-unit {:type "points", :singular "point", :plural "points"},
  :issues ({:cost 10, :key "CSE-1", :work-types #{"Documentation" "Bug"}}
           {:cost 25, :key "CSE-2", :work-types #{"Documentation" "Feature"}}
           {:cost 5, :key "CSE-3", :work-types #{"Bug"}})}
