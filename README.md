@@ -110,9 +110,9 @@ projects:
   - key: DVP
     cost-unit:
       type: points
-        format:
-          singular: '%d point'
-          plural: '%d points'
+      format:
+        singular: '%d point'
+        plural: '%d points'
     cost-field: customfield_10006
     supported-work-types:
       - Bug
