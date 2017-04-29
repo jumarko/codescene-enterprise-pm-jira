@@ -25,11 +25,19 @@ You will need [Leiningen][] 2.0.0 or above installed.
 
 ### Running from the Command Line during development
 
+Make sure that you have proper configuration file in place. See [Configuration Path](#configuration-path)
+
 To start a web server for the application from the command line, run:
 
+    # Use default port 3004 and default config file 'codescene-jira.yml'
     lein run
+    
+    # Use custom port 3001 and default config file
     PORT=3001 lein run
+    
+    # Provide custom config file
     CODESCENE_JIRA_CONFIG=/etc/codescene-jira.yml lein run
+
     # Override database path (defaults to db/codescene-enterprise-pm-jira)
     CODESCENE_JIRA_DATABASE_PATH=/var/lib/codescene/codescene-enterprise-pm-jira lein run
 
