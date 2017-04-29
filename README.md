@@ -150,7 +150,7 @@ the project. 1 means it has the work type, 0 means it doesn't.
 #### Example Request
 
 ```bash
-curl -i -X GET -H 'Accept: application/json' -u 'user:pass' https://jira-integration.codescene.io/api/1/projects/CSE
+curl -i -H 'Accept: application/json' -u 'user:pass' https://jira-integration.codescene.io/api/1/projects/CSE
 ```
 
 #### Example Response
@@ -197,7 +197,7 @@ a HTTP status of 200 for signaling that it is available and functional, and
 #### Example Request
 
 ```bash
-curl -i -X GET -H 'Accept: application/json' -u 'user:pass' https://jira-integration.codescene.io/api/1/status
+curl -i -H 'Accept: application/json' -u 'user:pass' https://jira-integration.codescene.io/api/1/status
 ```
 
 #### Example Response
