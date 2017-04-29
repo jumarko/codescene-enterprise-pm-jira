@@ -1,6 +1,5 @@
 sync:
-  # sync every 4 hours
-  hour-interval: 4
+  hour-interval: 4 # sync every 4 hours
 auth:
   service:
     username: johndoe
@@ -10,24 +9,26 @@ auth:
     username: jirauser
     password: jirapwd
 projects:
-- key: CSE2
-  cost-field: timeoriginalestimate
-  cost-unit:
-    type: numeric
-    format:
-      singular: '%d point'
-      plural: '%d points'
-  supported-work-types:
-    - Bug
-    - Feature
-    - Refactoring
-    - Documentation
-  ticket-id-pattern: CSE2-(\d+)
-- key: PROJ
-  cost-field: somecustomfield
-  cost-unit:
-    type: minutes
-  supported-work-types:
-    - Bug
-    - Documentation
-  ticket-id-pattern: PROJ-(\d+)
+  - key: CSE
+    cost-unit:
+      type: minutes
+    cost-field: timeoriginalestimate
+    supported-work-types:
+      - Bug
+      - Feature
+      - Refactoring
+      - Documentation
+    ticket-id-pattern: (CSE-\d+)
+  - key: DVP
+    cost-unit:
+      type: points
+        format:
+          singular: '%d point'
+          plural: '%d points'
+    cost-field: customfield_10006
+    supported-work-types:
+      - Bug
+      - Feature
+      - Refactoring
+      - Documentation
+    ticket-id-pattern: (DVP-\d+)
