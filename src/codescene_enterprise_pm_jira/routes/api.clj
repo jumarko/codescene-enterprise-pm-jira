@@ -4,7 +4,7 @@
              [db :as db]
              [storage :as storage]]
             [codescene-enterprise-pm-jira.routes.status-page :refer [status-page]]
-            [ring.util.response :refer [response]]
+            [ring.util.response :as response]
             [slingshot.slingshot :refer [throw+]]))
 
 (defn- work-type-flags
@@ -45,17 +45,20 @@
    :types (work-type-flags all-work-types work-types)})
 
 (defn project->response [{:keys [key cost-unit work-types issues ticket-id-pattern] :as project}]
-  (let [work-types-ordered (vec work-types)]
-    {:id        key
-     :costUnit  cost-unit
-     :workTypes work-types
-     :idType    "ticket-id"
-     :items     (map (partial issue->response ticket-id-pattern work-types-ordered project) issues)}))
+  (when project
+    (let [work-types-ordered (vec work-types)]
+      {:id        key
+       :costUnit  cost-unit
+       :workTypes work-types
+       :idType    "ticket-id"
+       :items     (map (partial issue->response ticket-id-pattern work-types-ordered project) issues)})))
 
 (defn project-handler [project-id]
-  (response (project->response
-             (storage/get-project (db/persistent-connection) project-id))))
+  (if-let [project (project->response
+                     (storage/get-project (db/persistent-connection) project-id))]
+    (response/response project)
+    (response/not-found {:error (str "Project id=" project-id " has not been found.")})))
 
 (defn api-status-handler []
-  (response {:status :ok
+  (response/response {:status :ok
              :name "CodeScene EnterPrise JIRA Integration"}))
