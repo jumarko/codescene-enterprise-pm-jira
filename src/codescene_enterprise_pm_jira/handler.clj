@@ -41,7 +41,8 @@
     config))
 
 (defn destroy []
-  (log/info "destroy called"))
+  (log/info "destroy called")
+  (scheduling/stop-scheduled-sync))
 
 (defonce ^:private server (atom nil))
 
