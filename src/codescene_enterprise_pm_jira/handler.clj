@@ -10,16 +10,13 @@
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.adapter.jetty :refer [run-jetty]]
-            [buddy.auth :refer [authenticated? throw-unauthorized]]
-            [buddy.auth.backends.httpbasic :refer [http-basic-backend]]
-            [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
-            [buddy.auth.accessrules :refer [restrict]]
             [hiccup.core :refer [html]]
             [hiccup.page :refer [html5 include-css]]
             [hiccup.form :as form]
             [hiccup.util :refer [*base-url*]]
             [hiccup.middleware :refer [wrap-base-url]]
             [taoensso.timbre :as log]
+            [codescene-enterprise-pm-jira.auth :as auth]
             [codescene-enterprise-pm-jira.db :as db]
             [codescene-enterprise-pm-jira.storage :as storage]
             [codescene-enterprise-pm-jira.config :as config]
@@ -121,65 +118,44 @@
 
 (def app nil)
 
-(def ^:private ^:const realm "codescene-jira")
 
 (defn- app-routes [config]
-  (-> (routes
-       (GET "/" [message error]
-            (status-page config message error))
+  (routes
+   (GET "/" [message error]
+     (status-page config message error))
 
-       (GET "/api/1/status" []
-            (-> (response {:status :ok
-                           :name "CodeScene EnterPrise JIRA Integration"})))
+   (GET "/api/1/status" []
+     (-> (response {:status :ok
+                    :name "CodeScene EnterPrise JIRA Integration"})))
 
-       (GET "/api/1/projects/:project-id" [project-id]
-            (response (get-project project-id)))
+   (GET "/api/1/projects/:project-id" [project-id]
+     (response (get-project project-id)))
 
-       (POST "/sync/force" [project-key]
-             (try+
-              (sync/sync-project-with-key config project-key)
-              (redirect-with-query
-               {:message (format "Successfully synced project %s." project-key)})
-              (catch [:type :project-not-configured] {:keys [msg]}
-                (redirect-with-query {:error msg}))
-              (catch [:type :config-not-found] {:keys [msg]}
-                (redirect-with-query {:error msg}))
-              (catch [:type :jira-access-problem] {:keys [msg]}
-                (redirect-with-query {:error msg}))))
+   (POST "/sync/force" [project-key]
+     (try+
+      (sync/sync-project-with-key config project-key)
+      (redirect-with-query
+       {:message (format "Successfully synced project %s." project-key)})
+      (catch [:type :project-not-configured] {:keys [msg]}
+        (redirect-with-query {:error msg}))
+      (catch [:type :config-not-found] {:keys [msg]}
+        (redirect-with-query {:error msg}))
+      (catch [:type :jira-access-problem] {:keys [msg]}
+        (redirect-with-query {:error msg}))))
+   (route/not-found "Not Found")))
 
-       (route/not-found "Not Found"))
-      (restrict {:handler authenticated?
-                 :on-error (fn [_ _ ]
-                             (-> (response "You need to authenticate.")
-                                 (status 401)
-                                 (content-type "text/plain")
-                                 (header "WWW-Authenticate"
-                                         (str "Basic realm=\"" realm "\""))))})))
-
-(defn- create-auth-fn [{{service :service} :auth}]
-  {:pre [(not (string/blank? (:username service)))
-         (not (string/blank? (:password service)))]}
-  (fn [req {:keys [username password]}]
-    (and (= (:username service) username)
-         (= (:password service) password))))
-
-(defn- create-auth-backend [config]
-  (http-basic-backend {:realm realm
-                       :authfn (create-auth-fn config)}))
 
 (defn init-app [config]
   (alter-var-root
    #'app
    (constantly
-    (let [auth-backend (create-auth-backend config)]
-      (-> (app-routes config)
-          wrap-base-url
-          (wrap-resource "public")
-          (wrap-authentication auth-backend)
-          (wrap-authorization auth-backend)
-          (wrap-params)
-          (wrap-json-response)
-          (wrap-defaults api-defaults))))))
+    (-> (app-routes config)
+        wrap-base-url
+        (wrap-resource "public")
+        (auth/wrap-auth config)
+        (wrap-params)
+        (wrap-json-response)
+        (wrap-defaults api-defaults)))))
 
 (defn- load-config []
   (let [config (config/read-config)]
