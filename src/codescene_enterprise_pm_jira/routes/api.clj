@@ -1,5 +1,5 @@
 (ns codescene-enterprise-pm-jira.routes.api
-  "API route handlers and related logic."
+  "Logic related to api routes handlers."
   (:require [codescene-enterprise-pm-jira
              [db :as db]
              [storage :as storage]]
@@ -7,15 +7,17 @@
             [ring.util.response :refer [response]]
             [slingshot.slingshot :refer [throw+]]))
 
-(defn- replace-with-nil
-  "Retain all values in 'all' that exists in 'v', replace others with nil.
+(defn- work-type-flags
+  "Converts actual issue work types to flags.
+  Flag is 0 (= issue doesn't have the work type) or 1 (= issue has the work type).
 
-  (replace-with-nil [1 2 3 4 5 6] [4 5 1])
-  ;=> [1 nil nil 4 5 nil]
+  Example:
+  (work-type-flags [\"Documentation\" \"Feature\" \"Bug\"] [\"Documentation\" \"Bug\"])
+  ;=> (1 0 1)
   "
-  [all v]
-  ;; TODO: replace with `(map v all)`
-  (map #(v %1) all))
+  [all-work-types issue-work-types]
+  (map #(if %1 1 0)
+       (map (set issue-work-types) all-work-types)))
 
 (defn- apply-id-pattern [pattern key]
   (if-let [match (second (re-find (re-pattern pattern) key))]
@@ -38,13 +40,11 @@
     cost))
 
 (defn- issue->response [ticket-id-pattern all-work-types project {:keys [key cost work-types]}]
-  (let [work-type-flags (map #(if %1 1 0)
-                             (replace-with-nil all-work-types work-types))]
-    {:id    (apply-id-pattern ticket-id-pattern key)
-     :cost  (convert-cost cost project)
-     :types work-type-flags}))
+  {:id    (apply-id-pattern ticket-id-pattern key)
+   :cost  (convert-cost cost project)
+   :types (work-type-flags all-work-types work-types)})
 
-(defn- project->response [{:keys [key cost-unit work-types issues ticket-id-pattern] :as project}]
+(defn project->response [{:keys [key cost-unit work-types issues ticket-id-pattern] :as project}]
   (let [work-types-ordered (vec work-types)]
     {:id        key
      :costUnit  cost-unit
@@ -52,11 +52,10 @@
      :idType    "ticket-id"
      :items     (map (partial issue->response ticket-id-pattern work-types-ordered project) issues)}))
 
-(defn api-status-handler []
-  (response {:status :ok
-             :name "CodeScene EnterPrise JIRA Integration"}))
-
 (defn project-handler [project-id]
   (response (project->response
              (storage/get-project (db/persistent-connection) project-id))))
 
+(defn api-status-handler []
+  (response {:status :ok
+             :name "CodeScene EnterPrise JIRA Integration"}))
