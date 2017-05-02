@@ -25,11 +25,19 @@ You will need [Leiningen][] 2.0.0 or above installed.
 
 ### Running from the Command Line during development
 
+Make sure that you have a proper configuration file in place as described in [Configuration Path](#configuration-path)
+
 To start a web server for the application from the command line, run:
 
+    # Use default port 3004 and default config file 'codescene-jira.yml'
     lein run
+    
+    # Use custom port 3001 and default config file
     PORT=3001 lein run
+    
+    # Provide custom config file
     CODESCENE_JIRA_CONFIG=/etc/codescene-jira.yml lein run
+
     # Override database path (defaults to db/codescene-enterprise-pm-jira)
     CODESCENE_JIRA_DATABASE_PATH=/var/lib/codescene/codescene-enterprise-pm-jira lein run
 
@@ -102,9 +110,9 @@ projects:
   - key: DVP
     cost-unit:
       type: points
-        format:
-          singular: '%d point'
-          plural: '%d points'
+      format:
+        singular: '%d point'
+        plural: '%d points'
     cost-field: customfield_10006
     supported-work-types:
       - Bug
@@ -142,7 +150,7 @@ the project. 1 means it has the work type, 0 means it doesn't.
 #### Example Request
 
 ```bash
-curl -i -X GET -H 'Accept: application/json' -u 'user:pass' https://jira-integration.codescene.io/api/1/projects/CSE
+curl -i -H 'Accept: application/json' -u 'user:pass' https://jira-integration.codescene.io/api/1/projects/CSE
 ```
 
 #### Example Response
@@ -189,7 +197,7 @@ a HTTP status of 200 for signaling that it is available and functional, and
 #### Example Request
 
 ```bash
-curl -i -X GET -H 'Accept: application/json' -u 'user:pass' https://jira-integration.codescene.io/api/1/status
+curl -i -H 'Accept: application/json' -u 'user:pass' https://jira-integration.codescene.io/api/1/status
 ```
 
 #### Example Response
@@ -214,7 +222,7 @@ Adding/replacing a project with some test data:
 > (def conn (codescene-enterprise-pm-jira.db/persistent-connection))
 > (replace-project conn
     {:key "CSE"
-     :cost-unit {:type "numeric"
+     :cost-unit {:type "points"
                  :format {:singular "point" :plural "points"}}}
     [{:key "CSE-1" :cost 10 :work-types ["Bug" "Documentation"]}
      {:key "CSE-2" :cost 25 :work-types ["Feature" "Documentation"]}
@@ -227,7 +235,7 @@ Getting the project back:
 > (get-project conn "CSE")
 ;=>
 {:key "CSE",
- :cost-unit {:type "numeric", :singular "point", :plural "points"},
+ :cost-unit {:type "points", :singular "point", :plural "points"},
  :issues ({:cost 10, :key "CSE-1", :work-types #{"Documentation" "Bug"}}
           {:cost 25, :key "CSE-2", :work-types #{"Documentation" "Feature"}}
           {:cost 5, :key "CSE-3", :work-types #{"Bug"}})}
