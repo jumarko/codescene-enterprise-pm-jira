@@ -25,7 +25,7 @@ You will need [Leiningen][] 2.0.0 or above installed.
 
 ### Running from the Command Line during development
 
-Make sure that you have proper configuration file in place. See [Configuration Path](#configuration-path)
+Make sure that you have a proper configuration file in place as described in [Configuration Path](#configuration-path)
 
 To start a web server for the application from the command line, run:
 
