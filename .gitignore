@@ -12,3 +12,6 @@ pom.xml.asc
 /db
 /codescene-jira.yml
 .idea
+test-init.sh
+/test-db
+
