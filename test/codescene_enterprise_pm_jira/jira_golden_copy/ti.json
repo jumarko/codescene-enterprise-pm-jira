@@ -1,0 +1,17 @@
+{
+    "id": "TI",
+    "costUnit": {
+        "type": "minutes"
+    },
+    "workTypes": ["Bug", "Improvement"],
+    "idType": "ticket-id",
+    "items": [{
+        "id": "1",
+        "cost": 480,
+        "types": [1, 0]
+    }, {
+        "id": "2",
+        "cost": 60,
+        "types": [0, 1]
+    }]
+}

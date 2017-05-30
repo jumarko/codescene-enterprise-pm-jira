@@ -20,6 +20,8 @@
 
 (def cse-project-json (read-json "cse2.json"))
 
+(def ti-project-json (read-json "ti.json"))
+
 (def cse-project {:key                  "CSE2"
                   :cost-unit            {:type "minutes"} :cost-field "timeoriginalestimate"
                   :supported-work-types ["Bug" "Feature" "Refactoring" "Documentation" "Epic" "UI/UX"
@@ -70,16 +72,20 @@
   (f)
   (delete-test-db))
 
-
 (use-fixtures :each test-fixture)
-
 
 ;;; Tests
 
-(deftest ^:regression-test cse-project-test
-  (testing "project stats"
-    (let [response (make-request (mock/request :get "/api/1/projects/CSE2"))]
-      (is (= (:status response) 200))
-      (is (clojure.string/includes? (get-in response [:headers "Content-Type"]) "application/json"))
-      (is (= cse-project-json (:body response))))))
+(defn check-jira-project [project-key expected-json]
+  (let [response (make-request (mock/request :get (str "/api/1/projects/" project-key)))]
+    (is (= (:status response) 200))
+    (is (clojure.string/includes? (get-in response [:headers "Content-Type"]) "application/json"))
+    (is (= expected-json (:body response)))))
 
+(deftest ^:regression-test cse-project-test
+  (testing "CSE2 jira project stats"
+    (check-jira-project "CSE2" cse-project-json)))
+
+(deftest ^:regression-test ti-project-test
+  (testing "TI jira project stats"
+    (check-jira-project "TI" ti-project-json)))
