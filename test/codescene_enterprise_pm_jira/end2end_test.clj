@@ -6,10 +6,13 @@
              [db :as db]
              [handler :refer [app init-app]]]
             [ring.mock.request :as mock]
-            [ring.util.codec :refer [base64-encode]]))
+            [ring.util.codec :refer [base64-encode]]
+            [clojure.java.io :refer [delete-file]]))
 
 ;; TODO: document env variables?
 ;; - check that DB directory doesn't exist before running test
+
+;;; Helper functions
 
 (defn- read-json [filename]
   (-> (str "test/codescene_enterprise_pm_jira/jira_golden_copy/" filename)
@@ -41,7 +44,9 @@
   (app (-> ring-request
            add-auth-header)))
 
-(defn- configure-service [test-fn]
+
+;;; Test fixture
+(defn- configure-service []
   (db/init)
   (init-app {:sync     {:hour-interval 1}
              :auth     {:jira    {:username (System/getenv "JIRA_USERNAME")
@@ -49,15 +54,29 @@
                                   :base-uri "http://jira-integration.codescene.io"}
                         :service {:username "testuser"
                                   :password "testpassword"}}
-             :projects [cse-project ti-project]})
-  (test-fn))
+             :projects [cse-project ti-project]}))
 
-(defn- sync-projects-from-jira [test-fn]
+(defn- sync-projects-from-jira []
   (doseq [project [cse-project ti-project]]
-    (request (mock/request :post "/sync/force" {:project-key (:key project)})))
-  (test-fn))
+    (request (mock/request :post "/sync/force" {:project-key (:key project)}))))
 
-(use-fixtures :each (join-fixtures [configure-service sync-projects-from-jira]))
+(defn- delete-test-db []
+  (let [test-db-path (System/getenv "CODESCENE_JIRA_DATABASE_PATH")
+        ;; actual file has .mv.db extension
+        test-db-file (str test-db-path ".mv.db")]
+    (delete-file test-db-file)))
+
+(defn- test-fixture [f]
+  (configure-service)
+  (sync-projects-from-jira)
+  (f)
+  (delete-test-db))
+
+
+(use-fixtures :each test-fixture)
+
+
+;;; Tests
 
 (deftest test-app
   (testing "project stats"
