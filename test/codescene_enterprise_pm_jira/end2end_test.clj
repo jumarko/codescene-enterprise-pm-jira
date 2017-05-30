@@ -1,6 +1,6 @@
 (ns codescene-enterprise-pm-jira.end2end-test
   (:require [clojure
-             [string :refer [replace]]
+             [string :as string]
              [test :refer :all]]
             [codescene-enterprise-pm-jira
              [db :as db]
@@ -10,14 +10,13 @@
             [clojure.java.io :refer [delete-file]]))
 
 ;; TODO: document env variables?
-;; - check that DB directory doesn't exist before running test
 
 ;;; Helper functions
 
 (defn- read-json [filename]
   (-> (str "test/codescene_enterprise_pm_jira/jira_golden_copy/" filename)
       slurp
-      (replace #"\s+" "")))
+      (string/replace #"\s+" "")))
 
 (def cse-project-json (read-json "cse2.json"))
 
@@ -33,16 +32,15 @@
                  :supported-work-types ["Bug" "Improvement"]
                  :ticket-id-pattern    "TI-(\\d+)"})
 
-(defn- add-auth-header [request]
-  (mock/header request
+(defn- add-auth-header [ring-request]
+  (mock/header ring-request
                "Authorization"
                (str "Basic "
                     (base64-encode
                      (.getBytes "testuser:testpassword" "UTF-8")))))
 
-(defn- request [ring-request]
-  (app (-> ring-request
-           add-auth-header)))
+(defn- make-request [ring-request]
+  (app (add-auth-header ring-request)))
 
 
 ;;; Test fixture
@@ -58,7 +56,7 @@
 
 (defn- sync-projects-from-jira []
   (doseq [project [cse-project ti-project]]
-    (request (mock/request :post "/sync/force" {:project-key (:key project)}))))
+    (make-request (mock/request :post "/sync/force" {:project-key (:key project)}))))
 
 (defn- delete-test-db []
   (let [test-db-path (System/getenv "CODESCENE_JIRA_DATABASE_PATH")
@@ -78,9 +76,9 @@
 
 ;;; Tests
 
-(deftest test-app
+(deftest ^:regression-test cse-project-test
   (testing "project stats"
-    (let [response (request (mock/request :get "/api/1/projects/CSE2"))]
+    (let [response (make-request (mock/request :get "/api/1/projects/CSE2"))]
       (is (= (:status response) 200))
       (is (clojure.string/includes? (get-in response [:headers "Content-Type"]) "application/json"))
       (is (= cse-project-json (:body response))))))
